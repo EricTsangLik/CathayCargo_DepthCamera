@@ -1,0 +1,26 @@
+services:
+  valkey:
+    image: valkey/valkey:latest # Or a specific version like valkey/valkey:7.2.5
+    container_name: Valkey
+    ports:
+      - "6379:6379" # Map host port 6379 to container port 6379
+    # volumes:
+    #   - valkey_data:/data # Persist data to a named volume
+    # command: valkey-server /etc/valkey/valkey.conf --appendonly yes # Example command to enable AOF
+    # environment:
+    #   # Example environment variables (adjust as needed for your configuration)
+    #   - VALKEY_PASSWORD=mysecurepassword 
+    #   - VALKEY_PORT=6379
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: Redis-Insight
+    ports:
+      - "5540:5540"
+    # volumes:
+    #   - redisinsight_data:/db
+    # environment:
+    #   - REDISINSIGHT_DISABLE_AUTH=1
+    #   - REDISINSIGHT_PASSWORD=mysecurepassword
+    #   - REDISINSIGHT_PORT=8001
+    #   - REDISINSIGHT_HOST=localhost
