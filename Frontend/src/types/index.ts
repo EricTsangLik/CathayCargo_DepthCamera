@@ -28,6 +28,7 @@ export interface TableRow {
   weight: number;
   captureTime: string;
   status: string;
+  imageData?: string; // Base64 encoded image data
 }
 
 // System status interface

@@ -223,6 +223,118 @@ LOGISTECH specializes in advanced logistics and cargo handling solutions, provid
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: October 2025  
+## 📜 Version History
+
+### Version 1.3.0 (October 21, 2025)
+**Frontend Image Storage & Viewing Enhancement**
+
+#### New Features
+- ✨ **Frontend Image Storage**: Captured images are now stored directly in the frontend using base64 encoding
+- 🖼️ **Enhanced Image Viewer**: Beautiful new image viewing window with complete scan metadata
+- 📥 **Image Download**: Built-in download functionality for captured images
+- 🎯 **Session-based Storage**: Images persist during the current session in browser memory
+
+#### Technical Changes
+- Added `imageData?: string` field to `TableRow` interface for storing base64 images
+- Modified `CameraStream` component to capture and pass image data via `onCapture` callback
+- Completely rewrote `handleView()` to display stored images without backend API calls
+- Image capture now converts canvas to PNG format using `canvas.toDataURL('image/png')`
+
+#### Benefits
+- No backend dependency required for viewing captured images
+- Instant image viewing with zero API latency
+- Professional presentation with scan details (Order No, Dimensions, Weight, Capture Time)
+- Properly formatted filenames for downloads: `OrderNo_CaptureTime.png`
+
+---
+
+### Version 1.2.0 (October 21, 2025)
+**On-Demand Dimension Fetching**
+
+#### New Features
+- 🔄 **Smart Dimension Updates**: Dimensions are now fetched fresh from backend when Capture button is pressed
+- ⚡ **Improved Efficiency**: Eliminated continuous polling in favor of on-demand data fetching
+
+#### Technical Changes
+- Removed 5-second polling interval from dimension fetch logic
+- Modified `handleCapture()` to fetch fresh dimensions via `apiService.getDimensions()` on each capture
+- Added error handling with fallback to cached or default dimension values
+- Dimension state updates immediately upon successful API response
+
+#### Benefits
+- More efficient resource usage - API calls only when needed
+- Ensures latest dimension values at the exact moment of capture
+- Better accuracy for time-sensitive measurements
+- Graceful fallback if API temporarily unavailable
+
+---
+
+### Version 1.1.0 (October 21, 2025)
+**Auto-Polling Dimension Updates** (Deprecated in v1.2.0)
+
+#### Features Implemented (Later Removed)
+- Automatic 5-second polling interval for dimension updates
+- Continuous dimension refresh from backend API
+- Real-time dimension display in left sidebar
+
+#### Reason for Deprecation
+- Replaced with more efficient on-demand fetching in v1.2.0
+- Reduced unnecessary API calls and server load
+- Better user control over when data is updated
+
+---
+
+### Version 1.0.0 (October 2025)
+**Initial Release**
+
+#### Core Features
+- 📏 **Real-time Dimension Scanning**: Integration with depth cameras for accurate measurements
+- ⚖️ **Weight Integration**: Display weight data alongside dimensions
+- 📊 **Data Management**: Full CRUD operations for scan records
+- 🎥 **Camera Stream**: MJPEG stream from backend depth camera
+- 💾 **API Integration**: Backend connectivity for dimension data
+- 🎨 **Professional UI**: Modern, responsive interface for industrial use
+
+#### Technical Stack
+- React 18 with TypeScript
+- Component-based architecture
+- REST API communication via proxy
+- Native Fetch API for backend requests
+
+#### API Endpoints
+- `GET /dimension` - Fetch dimension data (length, width, height)
+- `GET /capture/streaming` - MJPEG video stream
+- `GET /capture` - Capture image endpoint (legacy)
+
+#### Components
+- `App.tsx` - Main application container
+- `Header.tsx` - Branding and timestamp display
+- `LeftSidebar.tsx` - Live dimension and order information
+- `CameraStream.tsx` - Camera feed and capture controls
+- `DataTable.tsx` - Scan history with edit/delete functionality
+- `EditModal.tsx` - Record editing interface
+
+---
+
+## 🔮 Roadmap & Future Enhancements
+
+### Planned Features
+- 💾 **Persistent Storage**: IndexedDB or localStorage for image persistence across sessions
+- 📤 **Bulk Export**: Export multiple scans with images as ZIP archive
+- 🔍 **Image Search**: Search and filter scans by visual content
+- 📊 **Analytics Dashboard**: Statistics and trends for scanning operations
+- 🔐 **User Authentication**: Role-based access control
+- 🌐 **Multi-language Support**: Internationalization for global deployment
+
+### Technical Improvements
+- Performance optimization for large image datasets
+- Progressive Web App (PWA) capabilities
+- Offline mode support
+- Real-time WebSocket integration for dimension updates
+- Advanced image processing and enhancement features
+
+---
+
+**Current Version**: 1.3.0  
+**Last Updated**: October 21, 2025  
 **Developed for**: Cathay Cargo Terminal Operations

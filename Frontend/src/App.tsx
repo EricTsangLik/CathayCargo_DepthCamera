@@ -18,7 +18,7 @@ function App() {
   const [dimensions, setDimensions] = useState<DimensionData | null>(null);
 
 
-  // Fetch dimensions from backend on component mount
+  // Fetch dimensions from backend on component mount (initial load)
   useEffect(() => {
     const fetchDimensions = async () => {
       try {
@@ -73,10 +73,148 @@ function App() {
     setTableData(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleView = async (id: string) => {
+  const handleView = (id: string) => {
     try {
       console.log(`Viewing captured image for scan ID: ${id}`);
-      await apiService.viewCapturedImage();
+      
+      // Find the scan entry
+      const scanEntry = tableData.find(item => item.id === id);
+      
+      if (!scanEntry) {
+        alert('Scan entry not found');
+        return;
+      }
+      
+      if (!scanEntry.imageData) {
+        alert('No image available for this scan. The image may not have been captured.');
+        return;
+      }
+      
+      // Open image in new window
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Captured Image - ${scanEntry.orderNo}</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+              }
+              .header {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+                text-align: center;
+                width: 100%;
+                max-width: 800px;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-top: 15px;
+                text-align: left;
+              }
+              .info-item {
+                padding: 8px;
+                background: #f8f9fa;
+                border-radius: 4px;
+              }
+              .info-label {
+                font-weight: bold;
+                color: #666;
+                font-size: 0.9rem;
+              }
+              .info-value {
+                color: #333;
+                margin-top: 4px;
+              }
+              .image-container {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                max-width: 90vw;
+                max-height: 80vh;
+                overflow: auto;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+                display: block;
+              }
+              .download-btn {
+                margin-top: 15px;
+                padding: 10px 20px;
+                background-color: #2196F3;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+              }
+              .download-btn:hover {
+                background-color: #1976D2;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>Captured Image</h2>
+              <p><strong>Order No:</strong> ${scanEntry.orderNo}</p>
+              <p><strong>Capture Time:</strong> ${scanEntry.captureTime}</p>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Length</div>
+                  <div class="info-value">${scanEntry.length} mm</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Width</div>
+                  <div class="info-value">${scanEntry.width} mm</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Height</div>
+                  <div class="info-value">${scanEntry.height} mm</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Weight</div>
+                  <div class="info-value">${scanEntry.weight} kg</div>
+                </div>
+              </div>
+            </div>
+            <div class="image-container">
+              <img src="${scanEntry.imageData}" alt="Captured Image - ${scanEntry.orderNo}" />
+              <div style="text-align: center;">
+                <button class="download-btn" onclick="downloadImage()">Download Image</button>
+              </div>
+            </div>
+            <script>
+              function downloadImage() {
+                const link = document.createElement('a');
+                link.href = '${scanEntry.imageData}';
+                link.download = '${scanEntry.orderNo}_${scanEntry.captureTime.replace(/[: ]/g, '-')}.png';
+                link.click();
+              }
+            </script>
+          </body>
+          </html>
+        `);
+        newWindow.document.close();
+      } else {
+        alert('Failed to open image viewer window. Please check your browser popup settings.');
+      }
+      
     } catch (error) {
       console.error('Error viewing captured image:', error);
       alert(`Failed to view image: ${(error as Error).message}`);
@@ -94,11 +232,22 @@ function App() {
   };
 
 
-  const handleCapture = async () => {
+  const handleCapture = async (imageData: string) => {
     try {
-      // Use loaded dimensions or default values if API is not available
-      const defaultDimensions = { length: 0, width: 0, height: 0 };
-      const useDimensions = dimensions || defaultDimensions;
+      // Fetch fresh dimension data from backend when capture button is pressed
+      console.log('Fetching fresh dimension data...');
+      let freshDimensions: DimensionData;
+      
+      try {
+        freshDimensions = await apiService.getDimensions();
+        setDimensions(freshDimensions); // Update the state with fresh data
+        console.log('Fresh dimensions fetched:', freshDimensions);
+      } catch (err) {
+        console.error('Error fetching fresh dimensions, using cached or default values:', err);
+        // Fallback to existing dimensions or defaults if fetch fails
+        const defaultDimensions = { length: 0, width: 0, height: 0 };
+        freshDimensions = dimensions || defaultDimensions;
+      }
       
       // Create new scan entry (frontend operation)
       const newScanId = (tableData.length + 1).toString();
@@ -109,9 +258,9 @@ function App() {
       const newScan: TableRow = {
         id: newScanId,
         orderNo: `Pallet_2025_${dateStr}_${orderNumber}`,
-        length: useDimensions.length,
-        width: useDimensions.width,
-        height: useDimensions.height,
+        length: freshDimensions.length,
+        width: freshDimensions.width,
+        height: freshDimensions.height,
         weight: 0, // Set weight to 0
         captureTime: new Date().toLocaleString('en-CA', {
           year: 'numeric',
@@ -122,12 +271,13 @@ function App() {
           second: '2-digit',
           hour12: false
         }).replace(/,/g, ''),
-        status: 'Processing'
+        status: 'Processing',
+        imageData: imageData // Store the captured image data
       };
       
       setTableData(prev => [newScan, ...prev]);
       
-      console.log('New scan entry created:', newScan);
+      console.log('New scan entry created with image data:', newScan);
       
       // Update status to complete after 2 seconds
       setTimeout(() => {

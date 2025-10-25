@@ -5,7 +5,7 @@ interface CameraStreamProps {
   isStreaming: boolean;
   onStartStream: () => void;
   onStopStream: () => void;
-  onCapture: () => void;
+  onCapture: (imageData: string) => void;
 }
 
 const CameraStream: React.FC<CameraStreamProps> = ({
@@ -17,7 +17,7 @@ const CameraStream: React.FC<CameraStreamProps> = ({
   const streamImgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [streamActive, setStreamActive] = useState(false);
-  const [resolution, setResolution] = useState('1920x1080');
+  const [resolution, setResolution] = useState('840x640');
   const [frameRate, setFrameRate] = useState(30);
   const [captureCount, setCaptureCount] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -44,20 +44,23 @@ const CameraStream: React.FC<CameraStreamProps> = ({
       }
 
       // Set canvas dimensions to match stream image
-      canvas.width = streamImg.naturalWidth || 1920;
-      canvas.height = streamImg.naturalHeight || 1080;
+      canvas.width = streamImg.naturalWidth || 840;
+      canvas.height = streamImg.naturalHeight || 640;
 
       // Draw the current stream frame to canvas
       context.drawImage(streamImg, 0, 0, canvas.width, canvas.height);
 
+      // Convert canvas to base64 image data
+      const imageData = canvas.toDataURL('image/png');
+      
       // Update state
       setCaptureCount(prev => prev + 1);
       setLastCaptureTime(new Date());
       
       console.log('Image captured from backend stream');
       
-      // Call the parent onCapture callback
-      onCapture();
+      // Call the parent onCapture callback with image data
+      onCapture(imageData);
       
     } catch (error) {
       console.error('Error capturing image:', error);
@@ -69,25 +72,25 @@ const CameraStream: React.FC<CameraStreamProps> = ({
 
   useEffect(() => {
     if (isStreaming && streamImgRef.current) {
-      console.log('Starting backend MJPEG stream...');
+      console.log('Starting Dimension Capture Stream...');
       setStreamError(null);
       
-      // Set up the MJPEG stream from backend
+      // Set up the Dimension Capture Stream from backend
       const streamUrl = apiService.getStreamingUrl();
       const streamImg = streamImgRef.current;
       
       // Handle stream load success
       const handleStreamLoad = () => {
-        console.log('Backend stream loaded successfully');
+        console.log('Dimension Capture Stream loaded successfully');
         setStreamActive(true);
         setStreamError(null);
       };
       
       // Handle stream load error
       const handleStreamError = (error: Event) => {
-        console.error('Backend stream error:', error);
+        console.error('Dimension Capture Stream error:', error);
         setStreamActive(false);
-        setStreamError('Failed to connect to backend stream. Please check if the backend is running.');
+        setStreamError('Failed to connect to Dimension Capture Stream. Please check if the backend is running.');
       };
       
       // Add event listeners
@@ -104,7 +107,7 @@ const CameraStream: React.FC<CameraStreamProps> = ({
         streamImg.src = '';
       };
     } else {
-      console.log('Stopping backend stream...');
+      console.log('Stopping Dimension Capture Stream...');
       setStreamActive(false);
       setStreamError(null);
       
@@ -163,7 +166,7 @@ const CameraStream: React.FC<CameraStreamProps> = ({
               <img
                 ref={streamImgRef}
                 className="camera-stream-video"
-                alt="Backend MJPEG Stream"
+                alt="Dimension Capture Stream"
                 style={{
                   width: '100%',
                   height: 'auto',
@@ -176,16 +179,16 @@ const CameraStream: React.FC<CameraStreamProps> = ({
             <div className="camera-stream-info">
               <div>Resolution: {resolution}</div>
               <div>FPS: {frameRate}</div>
-              <div>Mode: Backend MJPEG Stream</div>
+              <div>Mode: Dimension Capture Stream</div>
               <div>Status: {streamActive ? 'Connected' : 'Connecting...'}</div>
             </div>
           </>
         ) : (
           <div className="camera-stream-placeholder">
             <div>
-              <div>Backend Camera Stream</div>
+              <div>Dimension Capture Stream</div>
               <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
-                Click "Start Stream" to begin backend camera feed
+                Click "Start Stream" to begin Dimension Capture Stream
               </div>
             </div>
           </div>
